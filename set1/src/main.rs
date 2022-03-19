@@ -1,9 +1,11 @@
+use base64::encode;
+use std::str;
 use std::u8;
-use ::base64::{encode};
 
 fn main() {
     test_set1();
     test_set2();
+    test_set3();
 }
 
 pub fn test_set1() {
@@ -23,6 +25,14 @@ pub fn test_set2() {
     println!("Set 1, Challenge 2: Passed!");
 }
 
+pub fn test_set3() {
+    let input =
+        hex_to_bytes("1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736");
+    let output = single_byte_xor_cypher(&input);
+    let expected = "Cooking MC's like a pound of bacon";
+    assert_eq!(str::from_utf8(&output[..]).unwrap(), expected);
+    println!("Set 1, Challenge 3: Passed!");
+}
 
 // cryptopals set1 challenge1
 // https://cryptopals.com/sets/1/challenges/1
@@ -38,22 +48,21 @@ pub fn test_set2() {
 // Always operate on raw bytes, never on encoded strings. Only use hex and base64 for pretty-printing.
 pub fn hex_to_base64(hex: &str) -> String {
     // Make vector of bytes from octets
-    let bytes = hex_to_bytes(&hex);
+    let bytes: Vec<u8> = hex_to_bytes(&hex);
     encode(&bytes) // now convert from Vec<u8> to b64-encoded String
 }
 
 pub fn hex_to_bytes(hex: &str) -> Vec<u8> {
     let mut bytes = Vec::new();
-    for i in 0..(hex.len()/2) {
-        let res = u8::from_str_radix(&hex[2*i .. 2*i+2], 16);
+    for i in 0..(hex.len() / 2) {
+        let res = u8::from_str_radix(&hex[2 * i..2 * i + 2], 16);
         match res {
             Ok(v) => bytes.push(v),
             Err(e) => println!("Problem with hex: {}", e),
         };
-    };
+    }
     bytes
 }
-
 
 // cryptopals set1 challenge2
 // https://cryptopals.com/sets/1/challenges/2
@@ -66,7 +75,7 @@ pub fn hex_to_bytes(hex: &str) -> Vec<u8> {
 // 686974207468652062756c6c277320657965
 // ... should produce:
 // 746865206b696420646f6e277420706c6179
-pub fn xor_two_buffers(buf1: &Vec<u8>, buf2: &Vec<u8>) -> Vec<u8>  {
+pub fn xor_two_buffers(buf1: &Vec<u8>, buf2: &Vec<u8>) -> Vec<u8> {
     let mut bytes = Vec::new();
     for (a, b) in buf1.iter().zip(buf2.iter()) {
         bytes.push(a ^ b);
@@ -83,3 +92,29 @@ pub fn xor_two_buffers(buf1: &Vec<u8>, buf2: &Vec<u8>) -> Vec<u8>  {
 // ... has been XOR'd against a single character. Find the key, decrypt the message.
 // You can do this by hand. But don't: write code to do it for you.
 // How? Devise some method for "scoring" a piece of English plaintext. Character frequency is a good metric. Evaluate each output and choose the one with the best score.
+pub fn single_byte_xor_cypher(encoded_bytes: &Vec<u8>) -> Vec<u8> {
+    let mut best_match: u8 = 0;
+    let mut best_score: usize = 0;
+    for i in 0..128 as u8 {
+        let bytes: Vec<u8> = xor_two_buffers(encoded_bytes, &vec![i; encoded_bytes.len()]);
+        let score = score(bytes);
+        if score < best_score || best_score == 0 {
+            best_match = i;
+            best_score = score;
+        }
+    }
+    //println!("We think the best match is: {}", best_match as char);
+    xor_two_buffers(encoded_bytes, &vec![best_match; encoded_bytes.len()])
+}
+
+pub fn score(bytes: Vec<u8>) -> usize {
+    //bytes.iter().filter(|&&x| x as char == ' ').count()
+    let mut meme = bytes.clone().to_ascii_lowercase();
+    let mut score: usize = 0;
+    meme.sort();
+    let top_letters: [u8; 12] = [101, 116, 97, 111, 105, 110, 115, 104, 114, 100, 108, 117];
+    for l in top_letters {
+        score += meme.iter().position(|&x| x == l).unwrap_or(meme.len() * 2);
+    }
+    score
+}
