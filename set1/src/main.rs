@@ -1,4 +1,6 @@
 use base64::encode;
+use std::fs::File;
+use std::io::{ BufRead, BufReader };
 use std::str;
 use std::u8;
 
@@ -6,6 +8,7 @@ fn main() {
     test_set1();
     test_set2();
     test_set3();
+    test_set4();
 }
 
 pub fn test_set1() {
@@ -32,6 +35,11 @@ pub fn test_set3() {
     let expected = "Cooking MC's like a pound of bacon";
     assert_eq!(str::from_utf8(&output[..]).unwrap(), expected);
     println!("Set 1, Challenge 3: Passed!");
+}
+
+pub fn test_set4() {
+    let result = find_xor_encrypted_string();
+    println!("{}", str::from_utf8(&result[..]).unwrap_or("RIP"));
 }
 
 // cryptopals set1 challenge1
@@ -97,7 +105,7 @@ pub fn single_byte_xor_cypher(encoded_bytes: &Vec<u8>) -> Vec<u8> {
     let mut best_score: usize = 0;
     for i in 0..128 as u8 {
         let bytes: Vec<u8> = xor_two_buffers(encoded_bytes, &vec![i; encoded_bytes.len()]);
-        let score = score(bytes);
+        let score = score(&bytes);
         if score < best_score || best_score == 0 {
             best_match = i;
             best_score = score;
@@ -107,7 +115,7 @@ pub fn single_byte_xor_cypher(encoded_bytes: &Vec<u8>) -> Vec<u8> {
     xor_two_buffers(encoded_bytes, &vec![best_match; encoded_bytes.len()])
 }
 
-pub fn score(bytes: Vec<u8>) -> usize {
+pub fn score(bytes: &Vec<u8>) -> usize {
     //bytes.iter().filter(|&&x| x as char == ' ').count()
     let mut meme = bytes.clone().to_ascii_lowercase();
     let mut score: usize = 0;
@@ -117,4 +125,28 @@ pub fn score(bytes: Vec<u8>) -> usize {
         score += meme.iter().position(|&x| x == l).unwrap_or(meme.len() * 2);
     }
     score
+}
+
+// cryptopals set1 challenge4
+// https://cryptopals.com/sets/1/challenges/4
+
+// Detect single-character XOR
+// One of the 60-character strings in this file has been encrypted by single-character XOR.
+// Find it.
+// (Your code from #3 should help.)
+pub fn find_xor_encrypted_string() -> Vec<u8> {
+    let mut best_match: Vec<u8> = Vec::new();
+    let mut best_score: usize = 0;
+    let file = File::open("D:\\rust-projects\\cryptopals\\set1\\challenge_4.txt").expect("I am in literal hell");
+    let reader = BufReader::new(file);
+
+    for line in reader.lines() {
+        let meme = single_byte_xor_cypher(&line.unwrap().into_bytes());
+        let score = score(&meme);
+        if score > best_score {
+            best_match = meme;
+            best_score = score;
+        }
+    }
+    best_match
 }
