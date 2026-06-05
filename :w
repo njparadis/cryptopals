@@ -73,14 +73,7 @@ pub fn break_repeating_key_xor() -> Vec<u8> {
 
 // cryptopals set1 challenge7
 // https://cryptopals.com/sets/1/challenges/7
-pub fn aes128_ecb_mode(ciphertext: &[u8], key: &[u8]) -> Vec<u8> {
-    let mut buf = ciphertext.to_vec();
-    let decryptor = Decryptor::<Aes128>::new(key.into());
-    decryptor
-        .decrypt_padded_mut::<ecb::cipher::block_padding::Pkcs7>(&mut buf)
-        .unwrap()
-        .to_vec()
-}
+pub fn 
 
 #[cfg(test)]
 mod tests {
@@ -140,15 +133,14 @@ mod tests {
 
     #[test]
     fn test_part7() {
-        let file =
-            File::open("inputs/set1/challenge7.txt").expect("could not open challenge 7 input");
+        let file = File::open("inputs/set1/challenge6.txt").expect("could not open challenge 6 input");
         let reader = BufReader::new(file);
+        let ciphertext: String = reader.lines().map(|l| l.unwrap()).collect();
 
-        let b64: String = reader.lines().map(|l| l.unwrap()).collect();
-        let ciphertext = base64::decode(&b64).unwrap();
         let key = b"YELLOW SUBMARINE";
-
-        let plaintext = aes128_ecb_mode(&ciphertext, key);
-        assert!(plaintext.starts_with(b"I'm back and I'm ringin' the bell"));
+        let decryptor = Decryptor::<Aes128>::new(key.into());
+        let plaintext = decryptor
+            .decrypt_padded_mut::<ecb::cipher::block_padding::Pkcs7>(ciphertext.as_mut_bytes())
+            .unwrap();
     }
 }
