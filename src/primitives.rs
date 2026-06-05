@@ -14,7 +14,7 @@ pub fn hex_to_bytes(hex: &str) -> Vec<u8> {
 
 // cryptopals set1 challenge2
 // https://cryptopals.com/sets/1/challenges/2
-pub fn xor_two_buffers(buf1: &Vec<u8>, buf2: &Vec<u8>) -> Vec<u8> {
+pub fn xor_two_buffers(buf1: &[u8], buf2: &[u8]) -> Vec<u8> {
     let mut bytes = Vec::new();
     for (a, b) in buf1.iter().zip(buf2.iter()) {
         bytes.push(a ^ b);
@@ -22,7 +22,7 @@ pub fn xor_two_buffers(buf1: &Vec<u8>, buf2: &Vec<u8>) -> Vec<u8> {
     bytes
 }
 
-pub fn score(bytes: Vec<u8>) -> usize {
+pub fn score(bytes: &[u8]) -> usize {
     let lower = bytes.to_ascii_lowercase();
     b"etaoinshrdlu ".iter().map(|c| lower.iter().filter(|&&b| b == *c).count()).sum()
 }

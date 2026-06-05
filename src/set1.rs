@@ -15,7 +15,7 @@ pub fn single_byte_xor_cypher(encoded_bytes: &Vec<u8>) -> Vec<u8> {
     let mut best_score: usize = 0;
     for i in 0u8..=255u8 as u8 {
         let bytes: Vec<u8> = xor_two_buffers(encoded_bytes, &vec![i; encoded_bytes.len()]);
-        let score = score(bytes);
+        let score = score(&bytes);
         if score > best_score {
             best_match = i;
             best_score = score;
