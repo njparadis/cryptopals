@@ -53,7 +53,7 @@ mod tests {
     use std::str;
 
     #[test]
-    fn test_set1() {
+    fn test_part1() {
         let input = String::from("49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d");
         let output = hex_to_base64(&input);
         let expected =
@@ -62,7 +62,7 @@ mod tests {
     }
 
     #[test]
-    fn test_set2() {
+    fn test_part2() {
         let input1 = hex_to_bytes("1c0111001f010100061a024b53535009181c");
         let input2 = hex_to_bytes("686974207468652062756c6c277320657965");
         let output = xor_two_buffers(&input1, &input2);
@@ -71,7 +71,7 @@ mod tests {
     }
 
     #[test]
-    fn test_set3() {
+    fn test_part3() {
         let input =
             hex_to_bytes("1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736");
         let output = single_byte_xor_cypher(&input);
@@ -80,14 +80,14 @@ mod tests {
     }
 
     #[test]
-    fn test_set4() {
+    fn test_part4() {
         let output = find_xor_encrypted_string();
         let expected = "Now that the party is jumping\n";
         assert_eq!(str::from_utf8(&output[..]).unwrap(), expected);
     }
 
     #[test]
-    fn test_set5() {
+    fn test_part5() {
         let input = "Burning 'em, if you ain't quick and nimble\nI go crazy when I hear a cymbal";
         let expected = hex_to_bytes("0b3637272a2b2e63622c2e69692a23693a2a3c6324202d623d63343c2a26226324272765272a282b2f20430a652e2c652a3124333a653e2b2027630c692b20283165286326302e27282f");
         let key = "ICE";

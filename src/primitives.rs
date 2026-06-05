@@ -32,6 +32,8 @@ pub fn score(bytes: &[u8]) -> usize {
         .sum()
 }
 
+// cryptopals set1 challenge5
+// https://cryptopals.com/sets/1/challenges/5
 pub fn repeating_xor(plaintext: &[u8], key: &[u8]) -> Vec<u8> {
     let mut bytes = Vec::new();
     for (a, b) in plaintext.iter().zip(key.iter().cycle()) {
