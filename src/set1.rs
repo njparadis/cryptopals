@@ -1,7 +1,11 @@
-use crate::primitives::{hex_to_bytes, repeating_xor, score, xor_two_buffers};
+use crate::primitives::{
+    english_score, find_keysize, find_single_byte_key, hamming_distance, hex_to_bytes,
+    repeating_xor, xor_two_buffers,
+};
 use base64::encode;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
+use std::str;
 
 // cryptopals set1 challenge1
 // https://cryptopals.com/sets/1/challenges/1
@@ -12,44 +16,61 @@ pub fn hex_to_base64(hex: &str) -> String {
 
 // cryptopals set1 challenge3
 // https://cryptopals.com/sets/1/challenges/3
-pub fn single_byte_xor_cypher(encoded_bytes: &Vec<u8>) -> Vec<u8> {
-    let mut best_match: u8 = 0;
-    let mut best_score: usize = 0;
-    for i in 0u8..=255u8 as u8 {
-        let bytes: Vec<u8> = xor_two_buffers(encoded_bytes, &vec![i; encoded_bytes.len()]);
-        let score = score(&bytes);
-        if score > best_score {
-            best_match = i;
-            best_score = score;
-        }
-    }
-    xor_two_buffers(encoded_bytes, &vec![best_match; encoded_bytes.len()])
+pub fn single_byte_xor_cypher(encoded_bytes: &[u8]) -> Vec<u8> {
+    let key = find_single_byte_key(encoded_bytes);
+    xor_two_buffers(encoded_bytes, &vec![key; encoded_bytes.len()])
 }
 
 // cryptopals set1 challenge4
 // https://cryptopals.com/sets/1/challenges/4
 pub fn find_xor_encrypted_string() -> Vec<u8> {
     let mut best_match: Vec<u8> = Vec::new();
-    let mut best_score: usize = 0;
+    let mut best_english_score: usize = 0;
     let file = File::open("inputs/set1/challenge4.txt").expect("could not open challenge 4 input");
     let reader = BufReader::new(file);
 
     for line in reader.lines() {
         let decoded = hex_to_bytes(&line.unwrap());
         let candidate = single_byte_xor_cypher(&decoded);
-        let score = score(&candidate);
-        if score > best_score {
+        let english_score = english_score(&candidate);
+        if english_score > best_english_score {
             best_match = candidate;
-            best_score = score;
+            best_english_score = english_score;
         }
     }
     best_match
 }
 
+// cryptopals set1 challenge 6
+// https://cryptopals.com/sets/1/challenges/6
+pub fn break_repeating_key_xor() -> Vec<u8> {
+    let file = File::open("inputs/set1/challenge6.txt").expect("could not open challenge 4 input");
+    let reader = BufReader::new(file);
+    let b64: String = reader.lines().map(|l| l.unwrap()).collect();
+
+    let ciphertext = base64::decode(&b64).expect("invalid base64");
+    let keysize = find_keysize(&ciphertext);
+
+    let transposed: Vec<Vec<u8>> = (0..keysize)
+        .map(|i| {
+            ciphertext
+                .chunks(keysize)
+                .filter_map(|chunk| chunk.get(i).copied())
+                .collect()
+        })
+        .collect();
+    let key: Vec<u8> = transposed
+        .iter()
+        .map(|chunk| find_single_byte_key(&chunk))
+        .collect();
+    let plaintext = repeating_xor(&ciphertext, &key);
+    plaintext
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::primitives::{hex_to_bytes, xor_two_buffers};
+    use crate::primitives::{hamming_distance, hex_to_bytes, repeating_xor, xor_two_buffers};
     use std::str;
 
     #[test]
@@ -93,5 +114,12 @@ mod tests {
         let key = "ICE";
         let output = repeating_xor(input.as_bytes(), key.as_bytes());
         assert_eq!(output, expected);
+    }
+
+    #[test]
+    fn test_part6() {
+        assert_eq!(hamming_distance(b"this is a test", b"wokka wokka!!!"), 37);
+        let plaintext = break_repeating_key_xor();
+        assert!(plaintext.starts_with(b"I'm back and I'm ringin' the bell"));
     }
 }
