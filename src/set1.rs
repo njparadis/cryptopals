@@ -7,6 +7,7 @@ use base64::encode;
 use ecb::cipher::BlockDecryptMut;
 use ecb::cipher::KeyInit;
 use ecb::Decryptor;
+use std::collections::HashSet;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::str;
@@ -82,6 +83,15 @@ pub fn aes128_ecb_mode(ciphertext: &[u8], key: &[u8]) -> Vec<u8> {
         .to_vec()
 }
 
+// cryptopals set1 challenge8
+// https://cryptopals.com/sets/1/challenges/8
+pub fn detect_duplicate_blocks(line: &str) -> usize {
+    let bytes = hex_to_bytes(line);
+    let chunks = bytes.chunks(16);
+    let unique = chunks.clone().collect::<HashSet<_>>();
+    chunks.count() - unique.len()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -150,5 +160,23 @@ mod tests {
 
         let plaintext = aes128_ecb_mode(&ciphertext, key);
         assert!(plaintext.starts_with(b"I'm back and I'm ringin' the bell"));
+    }
+
+    #[test]
+    fn test_part8() {
+        let file =
+            File::open("inputs/set1/challenge8.txt").expect("could not open challenge 8 input");
+        let reader = BufReader::new(file);
+
+        let mut answer: String = String::new();
+        for line in reader.lines() {
+            if let Ok(l) = line {
+                if detect_duplicate_blocks(&l) > 0 {
+                    answer = l;
+                    break;
+                }
+            }
+        }
+        assert_eq!(detect_duplicate_blocks(&answer), 3);
     }
 }
