@@ -26,5 +26,16 @@ pub fn score(bytes: &[u8]) -> usize {
     let lower = bytes.to_ascii_lowercase();
     // the space at the end here is because spaces are a good sign we've
     // found a real sentence
-    b"etaoinshrdlu ".iter().map(|c| lower.iter().filter(|&&b| b == *c).count()).sum()
+    b"etaoinshrdlu "
+        .iter()
+        .map(|c| lower.iter().filter(|&&b| b == *c).count())
+        .sum()
+}
+
+pub fn repeating_xor(plaintext: &[u8], key: &[u8]) -> Vec<u8> {
+    let mut bytes = Vec::new();
+    for (a, b) in plaintext.iter().zip(key.iter().cycle()) {
+        bytes.push(a ^ b);
+    }
+    bytes
 }
