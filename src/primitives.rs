@@ -1,7 +1,7 @@
 use std::u8;
 
 pub fn hex_to_bytes(hex: &str) -> Vec<u8> {
-    let mut bytes = Vec::new();
+    let mut bytes = Vec::with_capacity(hex.len() / 2);
     for i in 0..(hex.len() / 2) {
         let res = u8::from_str_radix(&hex[2 * i..2 * i + 2], 16);
         match res {
@@ -15,7 +15,7 @@ pub fn hex_to_bytes(hex: &str) -> Vec<u8> {
 // cryptopals set1 challenge2
 // https://cryptopals.com/sets/1/challenges/2
 pub fn xor_two_buffers(buf1: &[u8], buf2: &[u8]) -> Vec<u8> {
-    let mut bytes = Vec::new();
+    let mut bytes = Vec::with_capacity(buf1.len());
     for (a, b) in buf1.iter().zip(buf2.iter()) {
         bytes.push(a ^ b);
     }
@@ -23,19 +23,18 @@ pub fn xor_two_buffers(buf1: &[u8], buf2: &[u8]) -> Vec<u8> {
 }
 
 pub fn english_score(bytes: &[u8]) -> usize {
-    let lower = bytes.to_ascii_lowercase();
-    // the space at the end here is because spaces are a good sign we've
-    // found a real sentence
-    b"etaoinshrdlu "
-        .iter()
-        .map(|c| lower.iter().filter(|&&b| b == *c).count())
-        .sum()
+    let mut counts = [0usize; 256];
+    for &b in bytes {
+        counts[b.to_ascii_lowercase() as usize] += 1;
+    }
+    // space included because it's a good signal for real sentences
+    b"etaoinshrdlu ".iter().map(|&c| counts[c as usize]).sum()
 }
 
 // cryptopals set1 challenge5
 // https://cryptopals.com/sets/1/challenges/5
 pub fn repeating_xor(plaintext: &[u8], key: &[u8]) -> Vec<u8> {
-    let mut bytes = Vec::new();
+    let mut bytes = Vec::with_capacity(plaintext.len());
     for (a, b) in plaintext.iter().zip(key.iter().cycle()) {
         bytes.push(a ^ b);
     }
@@ -57,8 +56,7 @@ pub fn find_single_byte_key(buf: &[u8]) -> u8 {
 }
 
 pub fn hamming_distance(buf1: &[u8], buf2: &[u8]) -> u32 {
-    let xord_buffers = xor_two_buffers(buf1, buf2);
-    xord_buffers.iter().map(|b| b.count_ones()).sum()
+    buf1.iter().zip(buf2.iter()).map(|(a, b)| (a ^ b).count_ones()).sum()
 }
 
 pub fn find_keysize(ciphertext: &[u8]) -> usize {
